@@ -3,30 +3,30 @@
 
 # © 2006-04, 2008-09, 2009-06 by Xah Lee, ∑ http://xahlee.org/
 
-# Given a website gallery of photos with hundreds of photos, i want to generate a thumbnail page.
+# Given a website gallery of images with hundreds of images, i want to generate a thumbnail page.
 
 # Technically: 
 # • Given a dir: e.g. /Users/xah/web/img/
-# • This dir has many html files inside it, some are in sub directories.
-# • Each html file has many inline images (<img src="…">). (all inline images are local files)
+# • This dir has many HTML files inside it, some are in sub directories.
+# • Each HTML file has many inline images (<img src="…">). (all inline images are local files)
 
-# the program will generate thumbnails for all the inline images in the html files. The thumbnail images are generated in a user specified path.
+# the program will generate thumbnails for all the inline images in the HTML files. The thumbnail images are generated in a user specified directory.
 
-# the program will output text to stdout. The text is html syntax. Each line is of this format:
-#: <a href="f.html"><img src="thumbnail_relative_path/1.png"><img src="thumbnail_relative_path/2.png"></a>
-# where f.html is one of the html file, and the 1.png and 2.png are the inline images linked to f.html.
+# the program will output text to stdout. The text is HTML syntax. Each line is of this format:
+# <a href="f.html"><img src="thumbnail_relative_path/1.png"><img src="thumbnail_relative_path/2.png"></a>
+# where f.html is one of the HTML file, and the 1.png and 2.png are the inline images linked to f.html.
 
-# • The goal is to create thumbnail images of all the inline images in all html files under that dir, and print a output that can serve as the index of thumbnails.
+# • The goal is to create thumbnail images of all the inline images in all HTML files under that dir, and print a output that can serve as the index of thumbnails.
 # • These thumbnail images destination can be specified, unrelated to the given dir.
-# • Thumbnail images must preserve the dir structure they are in. For example, if a inline image's full path is /a/b/c/d/1.img, and the a root is given as /a/b, then the thumbnail image's path must retain the c/d, as sub dir under the specified thumbnail destination. 
+# • Thumbnail images must preserve the dir structure they are in. For example, if a inline image's full path is /a/b/c/d/1.img, and the root is given as /a/b, then the thumbnail image's path must retain the c/d, as sub dir under the specified thumbnail destination. 
 # • if the inline image's size is smaller than a certain given size (specified as area), then skip it.
 
-# Note: online inline images in a html file will be considered for thumbnail. Any other images in the given dir or as linked images should be ignored.
+# Note: only inline images in a HTML file will be considered for thumbnail. Any other images in the given dir or as linked images should be ignored.
 
 
 #bugs & to dos
 
-# • 2009-06-08. Modify the output so that it simply generate a html file, not some stdout, which is complex and harder to understand.
+# • 2009-06-08. Modify the output so that it simply generate a HTML file, not some stdout, which is complex and harder to understand.
 
 # • 2009-06-08. Split up the build_thumbnails function. It's a bit long.
 
@@ -35,28 +35,27 @@
 
 # User Inputs
 
-# path where html files and images are at. e.g. /a/b/c/d
+# path where HTML files and images are at. e.g. “/cygdrive/c/Users/h3/web/xahsl_org/sl”
 # no trailing slash
-INPUT_PATH =  "/cygdrive/c/Users/h3/web/xahlee_org/Periodic_dosage_dir/lacru"
+INPUT_PATH =  "/cygdrive/c/Users/h3/web/xahsl_org/sl"
 
 # the value is equal or part of INPUT_PATH.
-# The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at /x/y/d/e/f/1.png
+# The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
 # no trailing slash
-ROOT_DIR =  "/cygdrive/c/Users/h3/web/xahlee_org/Periodic_dosage_dir/lacru" 
+ROOT_DIR =  "/cygdrive/c/Users/h3/web/xahsl_org/sl" 
 
 # the destination path of thumbanil images. It will be created. Existing things will be over-written.  e.g. /x/y
 # no trailing slash
-THUMBNAIL_DIR = "/cygdrive/c/Users/h3/web/xahlee_org/tn"
-THUMBNAIL_DIR = "/cygdrive/c/Users/h3/web/xahlee_org/Periodic_dosage_dir/lacru/tn"
+THUMBNAIL_DIR = "/cygdrive/c/Users/h3/web/xahsl_org/sl/tn"
 
 # thumbnail size
 THUMBNAIL_SIZE_AREA = 200 * 200
 
-# if a image is smaller than this area, don't gen thumbnail for it.
+# if a image is smaller than this area, don't create thumbnail for it.
 MIN_AREA = 200*200
 
-# if True, all thumbnails will be in jpg format. Otherwise, it's the same on the source image format.
-# This feature is usedful because stamp sized black & white png doesn't look good, may have artifacts.
+# if True, all thumbnails will be in JPG format. Otherwise, it's the same on the source image format.
+# This feature is usedful because stamp sized black & white PNG doesn't look good, may have artifacts.
 JPG_ONLY_THUMBNAILS = True # True or False
 
 # depth of nested dir to dive into.
@@ -113,7 +112,7 @@ def get_inline_img_paths(file_full_path):
     u"""Return a list of inline image paths from a file.
 
     Arg:
-    file_full_path: a full path to a html file.
+    file_full_path: a full path to a HTML file.
 
     Returns:
     A list.
@@ -137,15 +136,11 @@ def get_inline_img_paths(file_full_path):
 def link_fullpath(dir, locallink):
    u"""Get the full path of a relative path.
 
-   link_fullpath(dir, locallink) returns a string that is the full
-   path to the local link. For example,
-   link_fullpath('/Users/t/public_html/a/b', '../image/t.png') returns
-   'Users/t/public_html/a/image/t.png'. The returned result will not
-   contain double slash or '../' string.
+   link_fullpath(dir, locallink) returns a string that is the full path to the local link. For example, link_fullpath("/Users/t/public_html/a/b", "../image/t.png") returns "Users/t/public_html/a/image/t.png". The returned result will not contain double slash or "../" string.
    """
-   result = dir + '/' + locallink
-   result = re.sub(r'//+', r'/', result)
-   while re.search(r'/[^\/]+\/\.\.', result): result = re.sub(r'/[^\/]+\/\.\.', '', result)
+   result = dir + "/" + locallink
+   result = re.sub(r"//+", r"/", result)
+   while re.search(r"/[^\/]+\/\.\.", result): result = re.sub(r"/[^\/]+\/\.\.", "", result)
    return result
 
 def build_thumbnails(dPath, fName, tbPath, rPath, areaA):
@@ -153,7 +148,7 @@ def build_thumbnails(dPath, fName, tbPath, rPath, areaA):
 
     Args:
     dPath: directory full path
-    fName: path to a html file name that exists under dPath.
+    fName: path to a HTML file name that exists under dPath.
     tbPath: the thumbnail images destination dir. 
     rPath: is a root dir (substring of dPath), used to build the dir structure for tbPath for
 each thumbnail.
@@ -164,13 +159,13 @@ each thumbnail.
     tbPath for each thumbnail.
 
     For Example, if
-    dPath = '/Users/mary/Public/pictures'
-    fName = 'trip.html' (this exits under dPath)
-    tbPath = '/Users/mary/Public/thumbs'
-    rPath = '/Users/mary/Public' (must be a substring of dPath or equal to it.)
+    dPath = "/Users/mary/Public/pictures"
+    fName = "trip.html" (this exits under dPath)
+    tbPath = "/Users/mary/Public/thumbs"
+    rPath = "/Users/mary/Public" (must be a substring of dPath or equal to it.)
     and trip.html contains <img ="Beijin/day1/img1.jpg">
     then a thumbnail will be generated at
-    '/Users/mary/Public/thumbs/pictures/Beijin/day1/img1.jpg'
+    "/Users/mary/Public/thumbs/pictures/Beijin/day1/img1.jpg"
 
     This function makes a shell call to imagemagick's “convert” and “identify” commands, and assumes that both's path on the disk are set in the global vars “convert” and “identify”.
     """
