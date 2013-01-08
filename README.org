@@ -1,0 +1,7 @@
+-*- coding: utf-8 -*-
+
+2013-01-08
+
+* Generate Thumbnail
+
+A Python script to generate thumbnails from inline links of a HTML file.
