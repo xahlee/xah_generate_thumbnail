@@ -8,8 +8,11 @@ A Python script to generate thumbnails from inline links of a HTML file.
 
 This script is used to generate thumbnails for my gallery pages, e.g.
 
-• http://xahsl.org/sl/index.html
+• 〈Second Life Screenshot Gallery〉
+http://xahsl.org/sl/index.html
 
-• http://xaharts.org/va/visual_arts.html
+• 〈Xah's Visual Arts Gallery〉
+http://xaharts.org/va/visual_arts.html
 
-• http://xaharts.org/dinju/dinju.html
+• 〈Architectural Beauties〉
+http://xaharts.org/dinju/dinju.html
