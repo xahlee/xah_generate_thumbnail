@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Python
 
+# warning. this script doesn't work now. python 2 to 3 conversion in progress.
+
 # © 2006-04, 2008-09, 2009-06 by Xah Lee, ∑ http://xahlee.org/
 
 # Given a website gallery of images with hundreds of images, i want to generate a thumbnail page.
@@ -37,8 +39,7 @@
 
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
-INPUT_PATH =  "/home/xah/web/xahsl_org/sl"
-INPUT_PATH =  "/home/xah/web/xahlee_info/kbd/"
+INPUT_PATH =  "/home/xah/web/xahlee_info/kbd"
 
 # the value is equal or part of INPUT_PATH.
 # The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
@@ -47,7 +48,7 @@ ROOT_DIR =  "/home/xah/web/xahlee_info/kbd"
 
 # the destination path of thumbanil images. It will be created. Existing things will be over-written.  e.g. /x/y
 # no trailing slash
-THUMBNAIL_DIR = "/home/xah/web/xahlee_info/kbd/tn"
+THUMBNAIL_DIR = "/home/xah/web/xahlee_info/kbd/tn3"
 
 # thumbnail size
 THUMBNAIL_SIZE_AREA = 200 * 200
@@ -75,13 +76,14 @@ import re
 import subprocess
 import os
 import sys
-import Image
+
+from PIL import Image
 
 
 ## functions
 
 def scale_factor(A, w, h):
-    u"""Get the desired scale factor of a image.
+    """Get the desired scale factor of a image.
 
     scale_factor(A, w, h) returns a number s such that
     w*s*h*s==A. This is used for getting the scaling factor of a image
@@ -94,21 +96,23 @@ def scale_factor(A, w, h):
     return (float(A)/float(w*h))**0.5
 
 def get_img_dimension(img_path):
-    u"""Get the width and height of a image file.
+    """Get the width and height of a image file.
 
     Returns a tuple: (width, height)
     Each element is a integer.
+
+    Requires shell util image magic.
     """
     return Image.open(img_path).size
 
 def create_thumbnail( i_path, new_path, scale_n):
-    u"""Create a image from i_path at new_path, with scale scale_n in percent.
+    """Create a image from i_path at new_path, with scale scale_n in percent.
 The i_path and new_path are full paths, including dir and file name.
     """
     subprocess.Popen([GM_CVT_PATH, 'convert',  '-scale', str(round( scale_n * 100,2) ) + '%', '-sharpen','1', i_path, new_path] ).wait()
 
 def get_inline_img_paths(file_full_path):
-    u"""Return a list of inline image paths from a file.
+    """Return a list of inline image paths from a file.
 
     Arg:
     file_full_path: a full path to a HTML file.
@@ -118,22 +122,20 @@ def get_inline_img_paths(file_full_path):
 
     Example return value: ['xx.jpg','../image.png']
     """
-    FF = open(file_full_path,'rb')
-    txt_segs = re.split( re.compile(r'src', re.U|re.I), unicode(FF.read(), 'utf-8'))
-#    txt_segs = re.split( r'src', unicode(FF.read(), 'utf-8'))
-    txt_segs.pop(0)
-    FF.close()
-    linx = []
-    for link_block in txt_segs:
-        match_result = re.search(ur'\s*=\s*\"([^\"]+)\"', link_block, re.U)
-        if match_result:
-            src_str = match_result.group(1).encode('utf-8')
-            if re.search(ur'jpg|jpeg|gif|png$', src_str, re.U | re.I):
-                linx.append( src_str )
-    return linx
+    fileContent = open(file_full_path,'r', encoding="utf-8").read()
+    textSegments = re.split( re.compile(r'src', re.U|re.I), fileContent)
+    textSegments.pop(0)
+    imgLinkList = []
+    for textBlock in textSegments:
+        matchResult = re.search(r'\s*=\s*\"([^\"]+)\"', textBlock, re.U)
+        if matchResult:
+            src_str = matchResult.group(1)
+            if re.search(r'jpg|jpeg|gif|png$', src_str, re.U | re.I):
+                imgLinkList.append( src_str )
+    return imgLinkList
 
 def link_fullpath(dir, locallink):
-   u"""Get the full path of a relative path.
+   """Get the full path of a relative path.
 
    link_fullpath(dir, locallink) returns a string that is the full path to the local link. For example, link_fullpath("/Users/t/public_html/a/b", "../image/t.png") returns "Users/t/public_html/a/image/t.png". The returned result will not contain double slash or "../" string.
    """
@@ -143,7 +145,7 @@ def link_fullpath(dir, locallink):
    return result
 
 def build_thumbnails(dPath, fName, tbPath, rPath, areaA):
-    u"""Generate thumbnail images.
+    """Generate thumbnail images.
 
     Args:
     dPath: directory full path
@@ -176,7 +178,7 @@ each thumbnail.
 
     # Generate a list of image paths. Each element of imgPaths is a full path to a image.
     imgPaths = []
-    for im in filter(lambda x : (not x.startswith('http')) and (not x.endswith('icon_sum.gif')), get_inline_img_paths(dPath + '/' + fName)):
+    for im in [x for x in get_inline_img_paths(dPath + '/' + fName) if (not x.startswith('http')) and (not x.endswith('icon_sum.gif'))]:
         imgPaths.append (link_fullpath(dPath, im))
 #    print dPath, fName, tbPath, rPath
 #    print imgPaths
@@ -224,7 +226,7 @@ each thumbnail.
         (fileBaseName, fileExtension) = os.path.splitext(fileName)
         #print "Creating thumbnail:", thumb_f_path
         try:
-            os.makedirs(dirName,0775)
+            os.makedirs(dirName,0o775)
         except(OSError):
             pass
 
@@ -232,25 +234,39 @@ each thumbnail.
 
         if os.path.exists(thumb_f_path):
             if OVERWRITE_EXISTING_THUMBNAIL:
-                create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA,img_d[1][0],img_d[1][1]))
+                create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA, img_d[1][0],img_d[1][1]))
         else:
-            create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA,img_d[1][0],img_d[1][1]))
+            create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA, img_d[1][0],img_d[1][1]))
 
-    print '</a>'
+    print('</a>')
+
+
 
 #################
 # main
 
-def dir_handler(dummy, curdir, file_list):
-   curdir_level = len(re.split('/',curdir))-len(re.split('/',INPUT_PATH))
-   filess_level = curdir_level + 1
-   if MIN_LEVEL <= filess_level <= MAX_LEVEL:
-      for f_path in file_list:
-          if re.search(r'\.html$', f_path, re.U) and os.path.isfile(curdir+'/' + f_path):
-            # print "processing:", curdir + '/' + f_path
-            build_thumbnails(curdir, f_path, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+# report if the input path doesn't exist
+if (not os.path.exists(INPUT_PATH)):
+    sys.stderr.write("Error: input path 「{}」 doesn't exist!".format(INPUT_PATH))
+    sys.exit(1)
 
-while INPUT_PATH[-1] == '/':
-    INPUT_PATH = INPUT_PATH[0:-1] # delete trailing slash
+def ff(dPath, fName, tbPath, rPath, areaA):
+    print(dPath, fName)
 
-os.path.walk(INPUT_PATH, dir_handler, 'dummy')
+# traverse the dir, call check_google_analytics() on the file
+for dpath, dirList, fileList in os.walk(INPUT_PATH):
+    for fname in fileList:
+        if re.search("\.html$", fname):
+            build_thumbnails(dpath, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+            # ff(dpath, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+
+# def dir_handler(dummy, curdir, file_list):
+#    curdir_level = len(re.split('/',curdir))-len(re.split('/',INPUT_PATH))
+#    filess_level = curdir_level + 1
+#    if MIN_LEVEL <= filess_level <= MAX_LEVEL:
+#       for f_path in file_list:
+#           if re.search(r'\.html$', f_path, re.U) and os.path.isfile(curdir+'/' + f_path):
+#             # print "processing:", curdir + '/' + f_path
+#             build_thumbnails(curdir, f_path, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+
+# os.path.walk(INPUT_PATH, dir_handler, 'dummy')

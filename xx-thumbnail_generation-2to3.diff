@@ -1,0 +1,116 @@
+RefactoringTool: Skipping implicit fixer: buffer
+RefactoringTool: Skipping implicit fixer: idioms
+RefactoringTool: Skipping implicit fixer: set_literal
+RefactoringTool: Skipping implicit fixer: ws_comma
+RefactoringTool: Refactored /home/xah/git/xah_generate_thumbnail/thumbnail_generation.py
+--- /home/xah/git/xah_generate_thumbnail/thumbnail_generation.py	(original)
++++ /home/xah/git/xah_generate_thumbnail/thumbnail_generation.py	(refactored)
+@@ -80,8 +80,8 @@
+ 
+ ## functions
+ 
+-def scale_factor(A, (w, h)):
+-    u"""Get the desired scale factor of a image.
++def scale_factor(A, xxx_todo_changeme):
++    """Get the desired scale factor of a image.
+ 
+     scale_factor(A, (w, h)) returns a number s such that
+     w*s*h*s==A. This is used for getting the scaling factor of a image
+@@ -91,10 +91,11 @@
+     specified by area A as thumbnail. (will not be exact due to
+     rounding of pixels to integers)
+     """
++    (w, h) = xxx_todo_changeme
+     return (float(A)/float(w*h))**0.5
+ 
+ def get_img_dimension(img_path):
+-    u"""Get the width and height of a image file.
++    """Get the width and height of a image file.
+ 
+     Returns a tuple: (width, height)
+     Each element is a integer.
+@@ -104,17 +105,17 @@
+     #   DSCN2699m-s.JPG JPEG 307x230+0+0 DirectClass 8-bit 51.7k 0.0u 0:01
+     # print "Identifying:", img_path
+     shell_out = subprocess.Popen([GM_ID_PATH, 'identify', img_path], stdout=subprocess.PIPE).communicate()[0]
+-    mo = re.search(u"[^ ]+ [^ ]+ (\d+)x(\d+)", shell_out)
++    mo = re.search("[^ ]+ [^ ]+ (\d+)x(\d+)", shell_out)
+     return (int(mo.group(1,2)[0]), int(mo.group(1,2)[1]))
+ 
+ def create_thumbnail( i_path, new_path, scale_n):
+-    u"""Create a image from i_path at new_path, with scale scale_n in percent.
++    """Create a image from i_path at new_path, with scale scale_n in percent.
+ The i_path and new_path are full paths, including dir and file name.
+     """
+     subprocess.Popen([GM_CVT_PATH, 'convert',  '-scale', str(round( scale_n * 100,2) ) + '%', '-sharpen','1', i_path, new_path] ).wait()
+ 
+ def get_inline_img_paths(file_full_path):
+-    u"""Return a list of inline image paths from a file.
++    """Return a list of inline image paths from a file.
+ 
+     Arg:
+     file_full_path: a full path to a HTML file.
+@@ -125,21 +126,21 @@
+     Example return value: ['xx.jpg','../image.png']
+     """    
+     FF = open(file_full_path,'rb')
+-    txt_segs = re.split( re.compile(r'src', re.U|re.I), unicode(FF.read(), 'utf-8'))
++    txt_segs = re.split( re.compile(r'src', re.U|re.I), str(FF.read(), 'utf-8'))
+ #    txt_segs = re.split( r'src', unicode(FF.read(), 'utf-8'))
+     txt_segs.pop(0)
+     FF.close()
+     linx = []
+     for link_block in txt_segs:
+-        match_result = re.search(ur'\s*=\s*\"([^\"]+)\"', link_block, re.U)
++        match_result = re.search(r'\s*=\s*\"([^\"]+)\"', link_block, re.U)
+         if match_result:
+             src_str = match_result.group(1).encode('utf-8')
+-            if re.search(ur'jpg|jpeg|gif|png$', src_str, re.U | re.I):
++            if re.search(r'jpg|jpeg|gif|png$', src_str, re.U | re.I):
+                 linx.append( src_str ) 
+     return linx
+ 
+ def link_fullpath(dir, locallink):
+-   u"""Get the full path of a relative path.
++   """Get the full path of a relative path.
+ 
+    link_fullpath(dir, locallink) returns a string that is the full path to the local link. For example, link_fullpath("/Users/t/public_html/a/b", "../image/t.png") returns "Users/t/public_html/a/image/t.png". The returned result will not contain double slash or "../" string.
+    """
+@@ -149,7 +150,7 @@
+    return result
+ 
+ def build_thumbnails(dPath, fName, tbPath, rPath, areaA):
+-    u"""Generate thumbnail images.
++    """Generate thumbnail images.
+ 
+     Args:
+     dPath: directory full path
+@@ -182,7 +183,7 @@
+     
+     # Generate a list of image paths. Each element of imgPaths is a full path to a image.
+     imgPaths = []
+-    for im in filter(lambda x : (not x.startswith('http')) and (not x.endswith('icon_sum.gif')), get_inline_img_paths(dPath + '/' + fName)):
++    for im in [x for x in get_inline_img_paths(dPath + '/' + fName) if (not x.startswith('http')) and (not x.endswith('icon_sum.gif'))]:
+         imgPaths.append (link_fullpath(dPath, im))
+ #    print dPath, fName, tbPath, rPath
+ #    print imgPaths
+@@ -230,7 +231,7 @@
+         (fileBaseName, fileExtension) = os.path.splitext(RefactoringTool: Files that were modified:
+RefactoringTool: /home/xah/git/xah_generate_thumbnail/thumbnail_generation.py
+fileName)
+         #print "Creating thumbnail:", thumb_f_path
+         try:
+-            os.makedirs(dirName,0775)
++            os.makedirs(dirName,0o775)
+         except(OSError):
+             pass
+ 
+@@ -242,7 +243,7 @@
+         else:
+             create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA,(img_d[1][0],img_d[1][1])))
+             
+-    print '</a>'
++    print('</a>')
+ 
+ 
+ 
