@@ -245,10 +245,10 @@ def dir_handler(dummy, curdir, file_list):
    curdir_level = len(re.split('/',curdir))-len(re.split('/',INPUT_PATH))
    filess_level = curdir_level + 1
    if MIN_LEVEL <= filess_level <= MAX_LEVEL:
-      for f_path in file_list:
-          if re.search(r'\.html$', f_path, re.U) and os.path.isfile(curdir+'/' + f_path):
-            # print "processing:", curdir + '/' + f_path
-            build_thumbnails(curdir, f_path, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+      for fname in file_list:
+          if re.search(r'\.html$', fname, re.U) and (not re.search(r'^xx', fname, re.U)):
+            # print "processing:", curdir + '/' + fname
+            build_thumbnails(curdir, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 
 while INPUT_PATH[-1] == '/':
     INPUT_PATH = INPUT_PATH[0:-1] # delete trailing slash

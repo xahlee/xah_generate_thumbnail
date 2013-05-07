@@ -4,9 +4,15 @@
 
 * Generate Thumbnail
 
-A Python script to generate thumbnails from inline links of a HTML file.
+A Python script to generate thumbnails from inline links of all HTML files in a dir.
 
 This script is used to generate thumbnails for my gallery pages, e.g.
+
+• 〈Visual Dictionary of Special Plane Curves〉
+http://xahlee.info/SpecialPlaneCurves_dir/specialPlaneCurves.html
+
+• 〈Geometry: Gallery of Surfaces〉
+http://xahlee.info/surface/gallery.html
 
 • 〈Second Life Screenshot Gallery〉
 http://xahsl.org/sl/index.html
