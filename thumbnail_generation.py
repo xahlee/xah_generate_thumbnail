@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Python
 
-# © 2006-04, 2008-09, 2009-06 by Xah Lee, ∑ http://xahlee.org/
+# © 2006-04, …, 2013-08-14 by Xah Lee, ∑ http://xahlee.org/
 
 # Given a website gallery of images with hundreds of images, i want to generate a thumbnail page.
 
@@ -26,8 +26,6 @@
 
 #bugs & to dos
 
-# • 2009-06-08. Modify the output so that it simply generate a HTML file, not some stdout, which is complex and harder to understand.
-
 # • 2009-06-08. Split up the build_thumbnails function. It's a bit long.
 
 # • 2009-06-08. Possibly rewrite to get rid of imagemagick shell call. Look into: http://www.pythonware.com/library/pil/handbook/index.htm or http://www.libgd.org/
@@ -37,8 +35,14 @@
 
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
-INPUT_PATH =  "/home/xah/web/xahsl_org/sl"
-INPUT_PATH =  "/home/xah/web/xahlee_info/kbd/"
+INPUT_PATH =  "/home/xah/web/xahlee_info/kbd"
+
+# if this this is not empty, then only these files will be processed
+file_list  = [
+# "/home/xah/web/xahlee_info/kbd/mouses.html",
+# "/home/xah/web/xahlee_info/kbd/mouse_with_spinning_flywheel.html",
+"/home/xah/web/xahlee_info/kbd/Microsoft_sculpt_ergonomic_keyboard.html",
+]
 
 # the value is equal or part of INPUT_PATH.
 # The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
@@ -67,8 +71,8 @@ OVERWRITE_EXISTING_THUMBNAIL = False # True or False
 
 # imageMagic/GraphicsMagic “identify” or “convert” program path
 
-GM_ID_PATH = r"/usr/bin/gm"
-GM_CVT_PATH = r"/usr/bin/gm"
+GM_ID_PATH = r"/usr/bin/convert"
+GM_CVT_PATH = r"/usr/bin/convert"
 
 
 import re
@@ -105,7 +109,7 @@ def create_thumbnail( i_path, new_path, scale_n):
     u"""Create a image from i_path at new_path, with scale scale_n in percent.
 The i_path and new_path are full paths, including dir and file name.
     """
-    subprocess.Popen([GM_CVT_PATH, 'convert',  '-scale', str(round( scale_n * 100,2) ) + '%', '-sharpen','1', i_path, new_path] ).wait()
+    subprocess.Popen([GM_CVT_PATH, '-scale', str(round( scale_n * 100,2) ) + '%', '-sharpen','1', i_path, new_path] ).wait()
 
 def get_inline_img_paths(file_full_path):
     u"""Return a list of inline image paths from a file.
@@ -178,8 +182,8 @@ each thumbnail.
     imgPaths = []
     for im in filter(lambda x : (not x.startswith('http')) and (not x.endswith('icon_sum.gif')), get_inline_img_paths(dPath + '/' + fName)):
         imgPaths.append (link_fullpath(dPath, im))
-#    print dPath, fName, tbPath, rPath
-#    print imgPaths
+    # print dPath, fName, tbPath, rPath
+    # print imgPaths
 
     # generate the imgPaths2 list. (Change the image path to the full sized image, if it exists. That is, if image ends in -s.jpg, find one without the '-s'.)
     imgPaths2 = []
@@ -191,6 +195,7 @@ each thumbnail.
             p2 = os.path.join(dirName,fileBaseName[0:-2]) + fileExtension
             if os.path.exists(p2): newPath = p2
         imgPaths2.append(newPath)
+    # print imgPaths2
 
     # generate the imgData list. Each element in imgData has the form [image full path, [width, height]].
     img_data = []
@@ -198,13 +203,14 @@ each thumbnail.
         (i_w, i_h) = get_img_dimension(i_path)
         if (int(i_w) * int(i_h)) > MIN_AREA:
             img_data.append( [i_path, [i_w, i_h]])
+    # print img_data, "\n"
 
     linkPath = (dPath+'/'+fName)[ len(rPath) + 1:]
     sys.stdout.write('<a href="' + linkPath + '">')
 
     # create the scaled image files in thumbnail dir. The dir structure is replicated.
     for img_d in img_data:
-        #print "Thumbnailing:", img_d
+        print "Thumbnailing:", img_d
         i_full_path = img_d[0]
         thumb_r_path = i_full_path[ len(rPath) + 1:]
         thumb_f_path = tbPath + "/" + thumb_r_path
@@ -214,15 +220,15 @@ each thumbnail.
             thumb_r_path = b + ".jpg"
             (b,e) = os.path.splitext(thumb_f_path)
             thumb_f_path = b + ".jpg"
-        #print "r",thumb_r_path
-        #print "f",thumb_f_path
+        # print "r",thumb_r_path
+        # print "f",thumb_f_path
 
         sys.stdout.write('<img src="' + thumb_f_path + '" alt="">')
 
         # make dirs to the thumbnail dir
         (dirName, fileName) = os.path.split(thumb_f_path)
         (fileBaseName, fileExtension) = os.path.splitext(fileName)
-        #print "Creating thumbnail:", thumb_f_path
+        # print "Creating thumbnail:", thumb_f_path
         try:
             os.makedirs(dirName,0775)
         except(OSError):
@@ -241,11 +247,11 @@ each thumbnail.
 #################
 # main
 
-def dir_handler(dummy, curdir, file_list):
+def dir_handler(dummy, curdir, fileList):
    curdir_level = len(re.split('/',curdir))-len(re.split('/',INPUT_PATH))
    filess_level = curdir_level + 1
    if MIN_LEVEL <= filess_level <= MAX_LEVEL:
-      for fname in file_list:
+      for fname in fileList:
           if re.search(r'\.html$', fname, re.U) and (not re.search(r'^xx', fname, re.U)):
             # print "processing:", curdir + '/' + fname
             build_thumbnails(curdir, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
@@ -253,4 +259,15 @@ def dir_handler(dummy, curdir, file_list):
 while INPUT_PATH[-1] == '/':
     INPUT_PATH = INPUT_PATH[0:-1] # delete trailing slash
 
-os.path.walk(INPUT_PATH, dir_handler, 'dummy')
+if (len(file_list) != 0):
+    for fPath in file_list:
+        (dirName, fileName) = os.path.split(fPath)
+        print (dirName, fileName)
+        build_thumbnails(dirName, fileName, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+else:
+    os.path.walk(INPUT_PATH, dir_handler, 'dummy')
+
+
+# build_thumbnails("/home/xah/web/xahlee_info/kbd", "Microsoft_sculpt_ergonomic_keyboard.html", THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+
+# create_thumbnail( '/home/xah/web/xahlee_info/kbd/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg', '/home/xah/web/xahlee_info/kbd/tn/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg', 0.21460759332655016)
