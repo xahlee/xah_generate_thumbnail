@@ -36,28 +36,42 @@
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
 INPUT_PATH =  "/home/xah/web/xahlee_info/kbd"
+INPUT_PATH =  "/home/xah/web/ergoemacs_org/emacs"
+
 
 # if this this is not empty, then only these files will be processed
 file_list  = [
 # "/home/xah/web/xahlee_info/kbd/mouses.html",
 # "/home/xah/web/xahlee_info/kbd/mouse_with_spinning_flywheel.html",
-"/home/xah/web/xahlee_info/kbd/Microsoft_sculpt_ergonomic_keyboard.html",
+# "/home/xah/web/xahlee_info/kbd/ergodox_keyboard.html"
+# "/home/xah/web/xahlee_info/kbd/keyboard_matias_mini_tactile_pro_keyboard.html",
+#"/home/xah/web/xahlee_info/kbd/microsoft_trackball_explorer.html",
+#"/home/xah/web/xahlee_info/kbd/cm_storm_recon_mouse.html",
+
+# "/home/xah/web/ergoemacs_org/emacs/emacs_logo.html",
+# "/home/xah/web/ergoemacs_org/emacs/lisp_logo.html",
+# "/home/xah/web/ergoemacs_org/emacs/lisp_logo_latte_art.html",
+# "/home/xah/web/ergoemacs_org/misc/M-x_donuts.html",
+# "/home/xah/web/ergoemacs_org/misc/emacs_logo_Halloween_pumpkin.html"
+
 ]
 
 # the value is equal or part of INPUT_PATH.
 # The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
 # no trailing slash
 ROOT_DIR =  "/home/xah/web/xahlee_info/kbd"
+ROOT_DIR =  "/home/xah/web/ergoemacs_org"
 
 # the destination path of thumbanil images. It will be created. Existing things will be over-written.  e.g. /x/y
 # no trailing slash
 THUMBNAIL_DIR = "/home/xah/web/xahlee_info/kbd/tn"
+THUMBNAIL_DIR = "/home/xah/web/ergoemacs_org/tn"
 
 # thumbnail size
 THUMBNAIL_SIZE_AREA = 200 * 200
 
 # if a image is smaller than this area, don't create thumbnail for it.
-MIN_AREA = 200*200
+MIN_AREA = 200*200 + 2
 
 # if True, all thumbnails will be in JPG format. Otherwise, it's the same on the source image format.
 # This feature is usedful because stamp sized black & white PNG doesn't look good, may have artifacts.
@@ -109,7 +123,7 @@ def create_thumbnail( i_path, new_path, scale_n):
     u"""Create a image from i_path at new_path, with scale scale_n in percent.
 The i_path and new_path are full paths, including dir and file name.
     """
-    subprocess.Popen([GM_CVT_PATH, '-scale', str(round( scale_n * 100,2) ) + '%', '-sharpen','1', i_path, new_path] ).wait()
+    subprocess.Popen([GM_CVT_PATH, "-scale", str(round( scale_n * 100,2) ) + "%", "-sharpen","1", i_path, new_path] ).wait()
 
 def get_inline_img_paths(file_full_path):
     u"""Return a list of inline image paths from a file.
@@ -120,19 +134,19 @@ def get_inline_img_paths(file_full_path):
     Returns:
     A list.
 
-    Example return value: ['xx.jpg','../image.png']
+    Example return value: ["xx.jpg","../image.png"]
     """
-    FF = open(file_full_path,'rb')
-    txt_segs = re.split( re.compile(r'src', re.U|re.I), unicode(FF.read(), 'utf-8'))
-#    txt_segs = re.split( r'src', unicode(FF.read(), 'utf-8'))
+    FF = open(file_full_path,"rb")
+    txt_segs = re.split( re.compile(r"<img ", re.U|re.I), unicode(FF.read(), "utf-8"))
+#    txt_segs = re.split( r"src", unicode(FF.read(), "utf-8"))
     txt_segs.pop(0)
     FF.close()
     linx = []
     for link_block in txt_segs:
-        match_result = re.search(ur'\s*=\s*\"([^\"]+)\"', link_block, re.U)
+        match_result = re.search(ur'\s*src=\s*\"([^\"]+)\"', link_block, re.U)
         if match_result:
-            src_str = match_result.group(1).encode('utf-8')
-            if re.search(ur'jpg|jpeg|gif|png$', src_str, re.U | re.I):
+            src_str = match_result.group(1).encode("utf-8")
+            if re.search(ur"jpg|jpeg|gif|png$", src_str, re.U | re.I):
                 linx.append( src_str )
     return linx
 
@@ -180,18 +194,18 @@ each thumbnail.
 
     # Generate a list of image paths. Each element of imgPaths is a full path to a image.
     imgPaths = []
-    for im in filter(lambda x : (not x.startswith('http')) and (not x.endswith('icon_sum.gif')), get_inline_img_paths(dPath + '/' + fName)):
+    for im in filter(lambda x : (not x.startswith("http")) and (not x.endswith("icon_sum.gif")), get_inline_img_paths(dPath + "/" + fName)):
         imgPaths.append (link_fullpath(dPath, im))
     # print dPath, fName, tbPath, rPath
     # print imgPaths
 
-    # generate the imgPaths2 list. (Change the image path to the full sized image, if it exists. That is, if image ends in -s.jpg, find one without the '-s'.)
+    # generate the imgPaths2 list. (Change the image path to the full sized image, if it exists. That is, if image ends in -s.jpg, find one without the "-s".)
     imgPaths2 = []
     for oldPath in imgPaths:
         newPath = oldPath
         (dirName, fileName) = os.path.split(oldPath)
         (fileBaseName, fileExtension) = os.path.splitext(fileName)
-        if(re.search(r'-s$',fileBaseName,re.U)):
+        if(re.search(r"-s$",fileBaseName,re.U)):
             p2 = os.path.join(dirName,fileBaseName[0:-2]) + fileExtension
             if os.path.exists(p2): newPath = p2
         imgPaths2.append(newPath)
@@ -205,12 +219,12 @@ each thumbnail.
             img_data.append( [i_path, [i_w, i_h]])
     # print img_data, "\n"
 
-    linkPath = (dPath+'/'+fName)[ len(rPath) + 1:]
+    linkPath = (dPath+"/"+fName)[ len(rPath) + 1:]
     sys.stdout.write('<a href="' + linkPath + '">')
 
     # create the scaled image files in thumbnail dir. The dir structure is replicated.
     for img_d in img_data:
-        print "Thumbnailing:", img_d
+        # print "Thumbnailing:", img_d
         i_full_path = img_d[0]
         thumb_r_path = i_full_path[ len(rPath) + 1:]
         thumb_f_path = tbPath + "/" + thumb_r_path
@@ -242,32 +256,32 @@ each thumbnail.
         else:
             create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA,img_d[1][0],img_d[1][1]))
 
-    print '</a>'
+    print "</a>"
 
 #################
 # main
 
 def dir_handler(dummy, curdir, fileList):
-   curdir_level = len(re.split('/',curdir))-len(re.split('/',INPUT_PATH))
+   curdir_level = len(re.split("/",curdir))-len(re.split("/",INPUT_PATH))
    filess_level = curdir_level + 1
    if MIN_LEVEL <= filess_level <= MAX_LEVEL:
       for fname in fileList:
-          if re.search(r'\.html$', fname, re.U) and (not re.search(r'^xx', fname, re.U)):
-            # print "processing:", curdir + '/' + fname
+          if re.search(r"\.html$", fname, re.U) and (not re.search(r"^xx", fname, re.U)):
+            # print "processing:", curdir + "/" + fname
             build_thumbnails(curdir, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 
-while INPUT_PATH[-1] == '/':
+while INPUT_PATH[-1] == "/":
     INPUT_PATH = INPUT_PATH[0:-1] # delete trailing slash
 
 if (len(file_list) != 0):
     for fPath in file_list:
         (dirName, fileName) = os.path.split(fPath)
-        print (dirName, fileName)
+        # print (dirName, fileName)
         build_thumbnails(dirName, fileName, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 else:
-    os.path.walk(INPUT_PATH, dir_handler, 'dummy')
+    os.path.walk(INPUT_PATH, dir_handler, "dummy")
 
 
 # build_thumbnails("/home/xah/web/xahlee_info/kbd", "Microsoft_sculpt_ergonomic_keyboard.html", THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 
-# create_thumbnail( '/home/xah/web/xahlee_info/kbd/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg', '/home/xah/web/xahlee_info/kbd/tn/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg', 0.21460759332655016)
+# create_thumbnail( "/home/xah/web/xahlee_info/kbd/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", "/home/xah/web/xahlee_info/kbd/tn/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", 0.21460759332655016)
