@@ -35,12 +35,27 @@
 
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
-INPUT_PATH =  "/home/xah/web/xahlee_info/kbd"
-INPUT_PATH =  "/home/xah/web/ergoemacs_org/emacs"
+INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
+INPUT_PATH_DIR =  "/home/xah/web/ergoemacs_org/misc"
+INPUT_PATH_DIR =  "/home/xah/web/ergoemacs_org"
+INPUT_PATH_DIR =  "/home/xah/web/xahporn_org/porn"
+INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
 
-
-# if this this is not empty, then only these files will be processed
+# if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
+
+"/home/xah/web/xahlee_info/kbd/logitech_mx_master_wireless_mouse.html",
+
+# "/home/xah/web/xahlee_info/kbd/logitech_g602_mouse.html",
+
+# "/home/xah/web/xahlee_info/kbd/left_handed_mouse.html",
+
+# "/home/xah/web/xahlee_info/kbd/cm_storm_recon_mouse.html",
+
+# "/home/xah/web/xahlee_info/kbd/Esrille_New_Keyboard.html",
+
+    # "/home/xah/web/xahlee_info/kbd/left_handed_mouse.html",
+# "/home/xah/web/xahlee_info/kbd/linux_mouse.html",
 # "/home/xah/web/xahlee_info/kbd/mouses.html",
 # "/home/xah/web/xahlee_info/kbd/mouse_with_spinning_flywheel.html",
 # "/home/xah/web/xahlee_info/kbd/ergodox_keyboard.html"
@@ -48,24 +63,16 @@ file_list  = [
 #"/home/xah/web/xahlee_info/kbd/microsoft_trackball_explorer.html",
 #"/home/xah/web/xahlee_info/kbd/cm_storm_recon_mouse.html",
 
-# "/home/xah/web/ergoemacs_org/emacs/emacs_logo.html",
-# "/home/xah/web/ergoemacs_org/emacs/lisp_logo.html",
-# "/home/xah/web/ergoemacs_org/emacs/lisp_logo_latte_art.html",
-# "/home/xah/web/ergoemacs_org/misc/M-x_donuts.html",
-# "/home/xah/web/ergoemacs_org/misc/emacs_logo_Halloween_pumpkin.html"
-
 ]
 
-# the value is equal or part of INPUT_PATH.
+# the value is equal or part of INPUT_PATH_DIR.
 # The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
 # no trailing slash
-ROOT_DIR =  "/home/xah/web/xahlee_info/kbd"
-ROOT_DIR =  "/home/xah/web/ergoemacs_org"
+ROOT_DIR = INPUT_PATH_DIR
 
-# the destination path of thumbanil images. It will be created. Existing things will be over-written.  e.g. /x/y
+# the destination path of thumbanil images. It will be created. Existing files will be over-written.  e.g. /x/y
 # no trailing slash
-THUMBNAIL_DIR = "/home/xah/web/xahlee_info/kbd/tn"
-THUMBNAIL_DIR = "/home/xah/web/ergoemacs_org/tn"
+THUMBNAIL_DIR = INPUT_PATH_DIR + "/tn"
 
 # thumbnail size
 THUMBNAIL_SIZE_AREA = 200 * 200
@@ -79,7 +86,7 @@ JPG_ONLY_THUMBNAILS = True # True or False
 
 # depth of nested dir to dive into.
 MIN_LEVEL = 1; # files and dirs of mydir are level 1.
-MAX_LEVEL = 2; # inclusive
+MAX_LEVEL = 4; # inclusive
 
 OVERWRITE_EXISTING_THUMBNAIL = False # True or False
 
@@ -262,7 +269,7 @@ each thumbnail.
 # main
 
 def dir_handler(dummy, curdir, fileList):
-   curdir_level = len(re.split("/",curdir))-len(re.split("/",INPUT_PATH))
+   curdir_level = len(re.split("/",curdir))-len(re.split("/",INPUT_PATH_DIR))
    filess_level = curdir_level + 1
    if MIN_LEVEL <= filess_level <= MAX_LEVEL:
       for fname in fileList:
@@ -270,8 +277,8 @@ def dir_handler(dummy, curdir, fileList):
             # print "processing:", curdir + "/" + fname
             build_thumbnails(curdir, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 
-while INPUT_PATH[-1] == "/":
-    INPUT_PATH = INPUT_PATH[0:-1] # delete trailing slash
+while INPUT_PATH_DIR[-1] == "/":
+    INPUT_PATH_DIR = INPUT_PATH_DIR[0:-1] # delete trailing slash
 
 if (len(file_list) != 0):
     for fPath in file_list:
@@ -279,8 +286,7 @@ if (len(file_list) != 0):
         # print (dirName, fileName)
         build_thumbnails(dirName, fileName, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 else:
-    os.path.walk(INPUT_PATH, dir_handler, "dummy")
-
+    os.path.walk(INPUT_PATH_DIR, dir_handler, "dummy")
 
 # build_thumbnails("/home/xah/web/xahlee_info/kbd", "Microsoft_sculpt_ergonomic_keyboard.html", THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 
