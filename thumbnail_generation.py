@@ -36,10 +36,6 @@
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
 INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
-INPUT_PATH_DIR =  "/home/xah/web/ergoemacs_org/misc"
-INPUT_PATH_DIR =  "/home/xah/web/ergoemacs_org"
-INPUT_PATH_DIR =  "/home/xah/web/xahporn_org/porn"
-INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
 
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
