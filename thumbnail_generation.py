@@ -40,28 +40,11 @@ INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
 
-"/home/xah/web/xahlee_info/kbd/logitech_mx_master_wireless_mouse.html",
-
-# "/home/xah/web/xahlee_info/kbd/logitech_g602_mouse.html",
-
-# "/home/xah/web/xahlee_info/kbd/left_handed_mouse.html",
-
-# "/home/xah/web/xahlee_info/kbd/cm_storm_recon_mouse.html",
-
-# "/home/xah/web/xahlee_info/kbd/Esrille_New_Keyboard.html",
-
-    # "/home/xah/web/xahlee_info/kbd/left_handed_mouse.html",
-# "/home/xah/web/xahlee_info/kbd/linux_mouse.html",
-# "/home/xah/web/xahlee_info/kbd/mouses.html",
-# "/home/xah/web/xahlee_info/kbd/mouse_with_spinning_flywheel.html",
-# "/home/xah/web/xahlee_info/kbd/ergodox_keyboard.html"
-# "/home/xah/web/xahlee_info/kbd/keyboard_matias_mini_tactile_pro_keyboard.html",
-#"/home/xah/web/xahlee_info/kbd/microsoft_trackball_explorer.html",
-#"/home/xah/web/xahlee_info/kbd/cm_storm_recon_mouse.html",
+"/home/xah/web/xahlee_info/kbd/NeXT_computer_keyboard.html",
 
 ]
 
-# the value is equal or part of INPUT_PATH_DIR.
+# the value is equal or parent of INPUT_PATH_DIR.
 # The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
 # no trailing slash
 ROOT_DIR = INPUT_PATH_DIR

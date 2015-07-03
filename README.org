@@ -1,24 +1,22 @@
--*- coding: utf-8 -*-
-
-2013-01-08
-
-* Generate Thumbnail
-
 A Python script to generate thumbnails from inline links of all HTML files in a dir. Output HTML that links to all the thumbnails.
 
 This script is used to generate thumbnails for my gallery pages, e.g.
 
-• 〈Visual Dictionary of Special Plane Curves〉
+Keyboard Reviews ＆ Gallery ⌨
+http://xahlee.info/kbd/keyboard_review_gallery.html
+
+Visual Dictionary of Special Plane Curves
 http://xahlee.info/SpecialPlaneCurves_dir/specialPlaneCurves.html
 
-• 〈Geometry: Gallery of Surfaces〉
+Geometry: Gallery of Surfaces
 http://xahlee.info/surface/gallery.html
 
-• 〈Second Life Screenshot Gallery〉
+Second Life Screenshot Gallery
 http://xahsl.org/sl/index.html
 
-• 〈Xah's Visual Arts Gallery〉
+Xah's Visual Arts Gallery
 http://xaharts.org/va/visual_arts.html
 
-• 〈Architectural Beauties〉
+Architectural Beauties
 http://xaharts.org/dinju/dinju.html
+
