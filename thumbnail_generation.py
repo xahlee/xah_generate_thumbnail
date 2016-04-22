@@ -40,7 +40,7 @@ INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
 
-"/home/xah/web/xahlee_info/kbd/NeXT_computer_keyboard.html",
+"/home/xah/web/xahlee_info/kbd/dactyl_keyboard.html"
 
 ]
 
@@ -223,7 +223,7 @@ each thumbnail.
         # print "r",thumb_r_path
         # print "f",thumb_f_path
 
-        sys.stdout.write('<img src="' + thumb_f_path + '" alt="">')
+        sys.stdout.write('<img src="' + thumb_f_path + '" alt="" />')
 
         # make dirs to the thumbnail dir
         (dirName, fileName) = os.path.split(thumb_f_path)
