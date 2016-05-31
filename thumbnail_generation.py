@@ -40,7 +40,7 @@ INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
 
-"/home/xah/web/xahlee_info/kbd/dactyl_keyboard.html"
+"/home/xah/web/xahlee_info/kbd/trackball_ball_sizes.html",
 
 ]
 
@@ -57,7 +57,7 @@ THUMBNAIL_DIR = INPUT_PATH_DIR + "/tn"
 THUMBNAIL_SIZE_AREA = 200 * 200
 
 # if a image is smaller than this area, don't create thumbnail for it.
-MIN_AREA = 200*200 + 2
+MIN_AREA = 200*200 + 50
 
 # if True, all thumbnails will be in JPG format. Otherwise, it's the same on the source image format.
 # This feature is usedful because stamp sized black & white PNG doesn't look good, may have artifacts.
@@ -80,6 +80,7 @@ import subprocess
 import os
 import sys
 import Image
+import os.path
 
 
 ## functions
@@ -207,6 +208,7 @@ each thumbnail.
 
     linkPath = (dPath+"/"+fName)[ len(rPath) + 1:]
     sys.stdout.write('<a href="' + linkPath + '">')
+    sys.stdout.write('\n')
 
     # create the scaled image files in thumbnail dir. The dir structure is replicated.
     for img_d in img_data:
@@ -223,7 +225,7 @@ each thumbnail.
         # print "r",thumb_r_path
         # print "f",thumb_f_path
 
-        sys.stdout.write('<img src="' + thumb_f_path + '" alt="" />')
+        sys.stdout.write('<img src="' + os.path.relpath(thumb_f_path, INPUT_PATH_DIR) + '" alt="" />\n')
 
         # make dirs to the thumbnail dir
         (dirName, fileName) = os.path.split(thumb_f_path)
