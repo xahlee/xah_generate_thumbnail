@@ -35,12 +35,13 @@
 
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
-INPUT_PATH_DIR =  "/home/xah/web/xahlee_info/kbd"
+INPUT_PATH_DIR =  "/home/xah/web/xaharts_org/Whirlwheel_dir"
 
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
 
-"/home/xah/web/xahlee_info/kbd/trackball_ball_sizes.html",
+
+"/home/xah/web/xaharts_org/Whirlwheel_dir/fan.html"
 
 ]
 
@@ -54,10 +55,10 @@ ROOT_DIR = INPUT_PATH_DIR
 THUMBNAIL_DIR = INPUT_PATH_DIR + "/tn"
 
 # thumbnail size
-THUMBNAIL_SIZE_AREA = 200 * 200
+THUMBNAIL_SIZE_AREA = 300 * 300
 
 # if a image is smaller than this area, don't create thumbnail for it.
-MIN_AREA = 200*200 + 50
+MIN_AREA = THUMBNAIL_SIZE_AREA * 1.05
 
 # if True, all thumbnails will be in JPG format. Otherwise, it's the same on the source image format.
 # This feature is usedful because stamp sized black & white PNG doesn't look good, may have artifacts.
@@ -88,6 +89,12 @@ import os.path
 def scale_factor(A, w, h):
     u"""Get the desired scale factor of a image.
 
+    A is a desired area of a image.
+    w is the current image width.
+    h is the current image height.
+
+    returns s, the scale factor to get to A, such that w*s*h*s==A
+
     scale_factor(A, w, h) returns a number s such that
     w*s*h*s==A. This is used for getting the scaling factor of a image
     with a desired thumbnail area A. The w and h are width and height
@@ -107,10 +114,26 @@ def get_img_dimension(img_path):
     return Image.open(img_path).size
 
 def create_thumbnail( i_path, new_path, scale_n):
-    u"""Create a image from i_path at new_path, with scale scale_n in percent.
+    u"""Create a image from i_path at new_path, with scale scale_n.
+scale_n is a real number between 0 and 1.
 The i_path and new_path are full paths, including dir and file name.
     """
     subprocess.Popen([GM_CVT_PATH, "-scale", str(round( scale_n * 100,2) ) + "%", "-sharpen","1", i_path, new_path] ).wait()
+
+def create_thumb2( img_path, n):
+    u"""Create scaled version of image at img_path.
+n is percentage, a integer. For example, 50, means 50%.
+img_path is full path to a image file.
+The new file will be created at the same directory and named with dimension prefixed, e.g.
+create_thumb2("/home/jane/cat.jpg", 50)
+will create 
+"/home/jane/_300x400_cat.jpg"
+    """
+    (dirName, fileName) = os.path.split(img_path)
+    w, h = Image.open(img_path).size
+    new_path = dirName + "/" + "_" + str( int(round(w * n/100.0))) + "x" + str(int(round(h * n/100.0))) + "_" + fileName
+    print(new_path)
+    subprocess.Popen([GM_CVT_PATH, "-scale", str(n) + "%", "-sharpen","1", img_path, new_path] ).wait()
 
 def get_inline_img_paths(file_full_path):
     u"""Return a list of inline image paths from a file.
@@ -139,7 +162,6 @@ def get_inline_img_paths(file_full_path):
 
 def link_fullpath(dir, locallink):
    u"""Get the full path of a relative path.
-
    link_fullpath(dir, locallink) returns a string that is the full path to the local link. For example, link_fullpath("/Users/t/public_html/a/b", "../image/t.png") returns "Users/t/public_html/a/image/t.png". The returned result will not contain double slash or "../" string.
    """
    result = dir + "/" + locallink
@@ -147,46 +169,12 @@ def link_fullpath(dir, locallink):
    while re.search(r"/[^\/]+\/\.\.", result): result = re.sub(r"/[^\/]+\/\.\.", "", result)
    return result
 
-def build_thumbnails(dPath, fName, tbPath, rPath, areaA):
-    u"""Generate thumbnail images.
-
-    Args:
-    dPath: directory full path
-    fName: path to a HTML file name that exists under dPath.
-    tbPath: the thumbnail images destination dir.
-    rPath: is a root dir (substring of dPath), used to build the dir structure for tbPath for
-each thumbnail.
-    areaA: is the thumbnail image size in terms of its area.
-
-    This function will create thumbnail images in the tbPath. rPath is
-    a root dir subset of dPath, used to build the dir structure for
-    tbPath for each thumbnail.
-
-    For Example, if
-    dPath = "/Users/mary/Public/pictures"
-    fName = "trip.html" (this exits under dPath)
-    tbPath = "/Users/mary/Public/thumbs"
-    rPath = "/Users/mary/Public" (must be a substring of dPath or equal to it.)
-    and trip.html contains <img ="Beijin/day1/img1.jpg">
-    then a thumbnail will be generated at
-    "/Users/mary/Public/thumbs/pictures/Beijin/day1/img1.jpg"
-
-    This function makes a shell call to imagemagick's “convert” and “identify” commands, and assumes that both's path on the disk are set in the global vars “convert” and “identify”.
+def get_large_size_image(imgPaths):
+    u"""Get larger size images, if it exists.
+    imagePaths is a list of image full paths.
+    returns a new list. 
+    If a image file ends in -s.jpg or -s.png, find one without the "-s", if exist.
     """
-    # outline:
-    # • Read in the file.
-    # • Get the img paths from inline images tags, accumulate them into a list.
-    # • For each image, find its dimension w and h.
-    # • Generate the thumbnail image on disk.
-
-    # Generate a list of image paths. Each element of imgPaths is a full path to a image.
-    imgPaths = []
-    for im in filter(lambda x : (not x.startswith("http")) and (not x.endswith("icon_sum.gif")), get_inline_img_paths(dPath + "/" + fName)):
-        imgPaths.append (link_fullpath(dPath, im))
-    # print dPath, fName, tbPath, rPath
-    # print imgPaths
-
-    # generate the imgPaths2 list. (Change the image path to the full sized image, if it exists. That is, if image ends in -s.jpg, find one without the "-s".)
     imgPaths2 = []
     for oldPath in imgPaths:
         newPath = oldPath
@@ -196,53 +184,120 @@ each thumbnail.
             p2 = os.path.join(dirName,fileBaseName[0:-2]) + fileExtension
             if os.path.exists(p2): newPath = p2
         imgPaths2.append(newPath)
-    # print imgPaths2
+    return imgPaths2
 
-    # generate the imgData list. Each element in imgData has the form [image full path, [width, height]].
-    img_data = []
-    for i_path in imgPaths2:
-        (i_w, i_h) = get_img_dimension(i_path)
-        if (int(i_w) * int(i_h)) > MIN_AREA:
-            img_data.append( [i_path, [i_w, i_h]])
-    # print img_data, "\n"
+def get_image_paths(html_full_path):
+    u"""return a list of image paths. Each element is a full path to a image file embeded in html_full_path
+    """
+    paths = []
+    for im in filter(lambda x : (not x.startswith("http")) , get_inline_img_paths(html_full_path)):
+        (dirPath, fileName) = os.path.split(html_full_path)
+        paths.append (link_fullpath(dirPath, im))
+    return paths
 
-    linkPath = (dPath+"/"+fName)[ len(rPath) + 1:]
-    sys.stdout.write('<a href="' + linkPath + '">')
-    sys.stdout.write('\n')
 
-    # create the scaled image files in thumbnail dir. The dir structure is replicated.
-    for img_d in img_data:
-        # print "Thumbnailing:", img_d
-        i_full_path = img_d[0]
-        thumb_r_path = i_full_path[ len(rPath) + 1:]
-        thumb_f_path = tbPath + "/" + thumb_r_path
+def create_scaled_image (imgPaths, tbPath, rootPath, img_size_area, MIN_AREA, JPG_ONLY_THUMBNAILS ):
+    u"""create the scaled image files in thumbnail dir. The dir structure is replicated.
+
+    """
+    for img_path in imgPaths:
+        (width, height) = get_img_dimension(img_path)
+        if (int(width) * int(height)) < MIN_AREA: continue
+
+        thumb_relative_path = img_path[ len(rootPath) + 1:]
+        thumb_full_path = tbPath + "/" + thumb_relative_path
 
         if JPG_ONLY_THUMBNAILS:
-            (b,e) = os.path.splitext(thumb_r_path)
-            thumb_r_path = b + ".jpg"
-            (b,e) = os.path.splitext(thumb_f_path)
-            thumb_f_path = b + ".jpg"
-        # print "r",thumb_r_path
-        # print "f",thumb_f_path
+            (b,e) = os.path.splitext(thumb_relative_path)
+            thumb_relative_path = b + ".jpg"
+            (b,e) = os.path.splitext(thumb_full_path)
+            thumb_full_path = b + ".jpg"
+        # print "r",thumb_relative_path
+        # print "f",thumb_full_path
 
-        sys.stdout.write('<img src="' + os.path.relpath(thumb_f_path, INPUT_PATH_DIR) + '" alt="" />\n')
+        sys.stdout.write('<img src="' + os.path.relpath(thumb_full_path, INPUT_PATH_DIR) + '" alt="" />\n')
 
         # make dirs to the thumbnail dir
-        (dirName, fileName) = os.path.split(thumb_f_path)
+        (dirName, fileName) = os.path.split(thumb_full_path)
         (fileBaseName, fileExtension) = os.path.splitext(fileName)
-        # print "Creating thumbnail:", thumb_f_path
+        # print "Creating thumbnail:", thumb_full_path
         try:
             os.makedirs(dirName,0775)
         except(OSError):
             pass
 
-        # if not (os.path.exists(thumb_f_path) and (not OVERWRITE_EXISTING_THUMBNAIL)):
+        # if not (os.path.exists(thumb_full_path) and (not OVERWRITE_EXISTING_THUMBNAIL)):
 
-        if os.path.exists(thumb_f_path):
+        if os.path.exists(thumb_full_path):
             if OVERWRITE_EXISTING_THUMBNAIL:
-                create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA,img_d[1][0],img_d[1][1]))
+                create_thumbnail(img_path, thumb_full_path, scale_factor(img_size_area, width, height ))
         else:
-            create_thumbnail(i_full_path, thumb_f_path, scale_factor(areaA,img_d[1][0],img_d[1][1]))
+            create_thumbnail(img_path, thumb_full_path, scale_factor(img_size_area, width, height))
+
+def create_thumbnails_same_dir (imgPaths, img_size_area, MIN_AREA):
+    u"""create the scaled image files
+imgPaths is a list of image file full paths
+img_size_area is a integer. It's desired image size as area. That is, the new width * height
+MIN_AREA is a integer. If original image is less than this, do nothing.
+2016-11-01
+    """
+    for img_path in imgPaths:
+        (width, height) = get_img_dimension(img_path)
+        if (int(width) * int(height)) < MIN_AREA: continue
+
+        scale_n = scale_factor(img_size_area, width, height)
+        (widthNew, heightNew) = int(width * scale_n), int(height * scale_n)
+
+        (dirName, fileName) = os.path.split(img_path)
+        newFileName = "zj" + str(widthNew) + "x" + str(heightNew) + "_" + fileName
+        thumb_file_path = dirName + "/" + newFileName
+
+        sys.stdout.write('<img src="' + thumb_file_path + '" alt="" />\n')
+
+        create_thumbnail(img_path, thumb_file_path, scale_n )
+
+
+def build_thumbnails(dPath, fName, tbPath, rootPath, img_size_area):
+    u"""Generate thumbnail images.
+
+    Args:
+    dPath: directory full path
+    fName: a HTML file name that exists under dPath.
+    tbPath: the thumbnail images destination dir.
+    rootPath: is a root dir (substring of dPath), used to build the dir structure for tbPath for
+each thumbnail.
+    img_size_area: is the thumbnail image size in terms of its area.
+
+    This function will create thumbnail images in the tbPath. rootPath is
+    a root dir subset of dPath, used to build the dir structure for
+    tbPath for each thumbnail.
+
+    For Example, if
+    dPath = "/Users/mary/Public/pictures"
+    fName = "trip.html" (this exits under dPath)
+    tbPath = "/Users/mary/Public/thumbs"
+    rootPath = "/Users/mary/Public" (must be a substring of dPath or equal to it.)
+    and trip.html contains <img ="Beijin/day1/img1.jpg">
+    then a thumbnail will be generated at
+    "/Users/mary/Public/thumbs/pictures/Beijin/day1/img1.jpg"
+
+    This function makes a shell call to imagemagick's “convert” and “identify” commands, and assumes that both's path on the disk are set in the global vars “convert” and “identify”.
+    2016-11-01
+    """
+    # outline:
+    # • Read in the file.
+    # • Get the img paths from inline images tags, accumulate them into a list.
+    # • For each image, find its dimension w and h.
+    # • Generate the thumbnail image on disk.
+
+    imgPaths = get_large_size_image(get_image_paths(dPath + "/" + fName))
+
+    linkPath = (dPath+"/"+fName)[ len(rootPath) + 1:]
+    sys.stdout.write('<a href="' + linkPath + '">')
+    sys.stdout.write('\n')
+
+    create_scaled_image (imgPaths, tbPath, rootPath, img_size_area, MIN_AREA, JPG_ONLY_THUMBNAILS )
+    # create_thumbnails_same_dir (imgPaths, img_size_area, MIN_AREA)
 
     print "</a>"
 
