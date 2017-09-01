@@ -3,57 +3,32 @@
 
 # © 2006-04, …, 2017-07-30 by Xah Lee, ∑ http://xahlee.info/
 
-# Given a website gallery of images with hundreds of images, i want to generate a thumbnail page.
+# generate a thumbnail images.
 
-# Technically:
 # • Given a dir: e.g. /Users/xah/web/img/
-# • This dir has many HTML files inside it, some are in sub directories.
+# • go thru all html files in it. (or a list of html files)
 # • Each HTML file has many inline images (<img src="…">). (all inline images are local files)
+# • generate thumbnails for those images, in the same directory those images are
 
-# the program will generate thumbnails for all the inline images in the HTML files. The thumbnail images are generated in a user specified directory.
+# print to stdout. print the path of the html file, followed by paths of the new thumb nails
 
-# the program will output text to stdout. The text is HTML syntax. Each line is of this format:
-# <a href="f.html"><img src="thumbnail_relative_path/1.png"><img src="thumbnail_relative_path/2.png"></a>
-# where f.html is one of the HTML file, and the 1.png and 2.png are the inline images linked to f.html.
-
-# • The goal is to create thumbnail images of all the inline images in all HTML files under that dir, and print a output that can serve as the index of thumbnails.
-# • These thumbnail images destination can be specified, unrelated to the given dir.
-# • Thumbnail images must preserve the dir structure they are in. For example, if a inline image's full path is /a/b/c/d/1.img, and the root is given as /a/b, then the thumbnail image's path must retain the c/d, as sub dir under the specified thumbnail destination.
-# • if the inline image's size is smaller than a certain given size (specified as area), then skip it.
-
-# Note: only inline images in a HTML file will be considered for thumbnail. Any other images in the given dir or as linked images should be ignored.
-
-
-#bugs & to dos
-
-# • 2009-06-08. Split up the build_thumbnails function. It's a bit long.
-
-# • 2009-06-08. Possibly rewrite to get rid of imagemagick shell call. Look into: http://www.pythonware.com/library/pil/handbook/index.htm or http://www.libgd.org/
-
-
+#--------------------------------------------------
 # User Inputs
 
 # path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
 # no trailing slash
-INPUT_PATH_DIR = "/home/xah/web/xahlee_info/kbd"
+INPUT_PATH_DIR = "/home/xah/web/xaharts_org/dinju"
 
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 file_list  = [
 
-"/home/xah/web/xahlee_info/kbd/eucalyptus_keyboard.html"
+# "/home/xah/web/xaharts_org/Whirlwheel_dir/reflecting_disks/solar_tower.html"
+
+"/home/xah/web/xaharts_org/dinju/bird_nest_building.html"
 
 ]
 
-# the value is equal or parent of INPUT_PATH_DIR.
-# The thumbnails will preserve dir structures. If a image is at  /a/b/c/d/e/f/1.png, and ROOT_DIR is /a/b/c, then the thumbnail will be at ‹thumbnail dir›/d/e/f/1.png
-# no trailing slash
-ROOT_DIR = INPUT_PATH_DIR
-
-# the destination path of thumbanil images. It will be created. Existing files will be over-written.  e.g. /x/y
-# no trailing slash
-THUMBNAIL_DIR = INPUT_PATH_DIR + "/tn"
-
-# thumbnail size
+# thumbnail area size, as width times height
 THUMBNAIL_SIZE_AREA = 200 * 200
 
 # if a image is smaller than this area, don't create thumbnail for it.
@@ -74,7 +49,7 @@ OVERWRITE_EXISTING_THUMBNAIL = True # True or False
 GM_ID_PATH = r"/usr/bin/convert"
 GM_CVT_PATH = r"/usr/bin/convert"
 
-
+#--------------------------------------------------
 import re
 import subprocess
 import os
@@ -82,7 +57,7 @@ import sys
 import Image
 import os.path
 
-
+#--------------------------------------------------
 ## functions
 
 def scale_factor(A, w, h):
@@ -194,47 +169,13 @@ def get_image_paths(html_full_path):
         paths.append (link_fullpath(dirPath, im))
     return paths
 
-def create_scaled_image (imgPaths, tbPath, rootPath, img_size_area, MIN_AREA, JPG_ONLY_THUMBNAILS ):
-    u"""create the scaled image files in thumbnail dir. The dir structure is replicated.
-
-    """
-    for img_path in imgPaths:
-        (width, height) = get_img_dimension(img_path)
-        if (int(width) * int(height)) < MIN_AREA: continue
-
-        thumb_relative_path = img_path[ len(rootPath) + 1:]
-        thumb_full_path = tbPath + "/" + thumb_relative_path
-
-        if JPG_ONLY_THUMBNAILS:
-            (b,e) = os.path.splitext(thumb_relative_path)
-            thumb_relative_path = b + ".jpg"
-            (b,e) = os.path.splitext(thumb_full_path)
-            thumb_full_path = b + ".jpg"
-
-        sys.stdout.write('<img src="' + os.path.relpath(thumb_full_path, INPUT_PATH_DIR) + '" alt="" />\n')
-
-        # make dirs to the thumbnail dir
-        (dirName, fileName) = os.path.split(thumb_full_path)
-        (fileBaseName, fileExtension) = os.path.splitext(fileName)
-        try:
-            os.makedirs(dirName,0775)
-        except(OSError):
-            pass
-
-        # if not (os.path.exists(thumb_full_path) and (not OVERWRITE_EXISTING_THUMBNAIL)):
-
-        if os.path.exists(thumb_full_path):
-            if OVERWRITE_EXISTING_THUMBNAIL:
-                create_thumbnail(img_path, thumb_full_path, scale_factor(img_size_area, width, height ))
-        else:
-            create_thumbnail(img_path, thumb_full_path, scale_factor(img_size_area, width, height))
-
-def create_thumbnails_same_dir (imgPaths, img_size_area, MIN_AREA):
+def create_thumb_img (imgPaths, img_size_area, MIN_AREA, thumb_nail_short_name):
     u"""create the scaled image files
 imgPaths is a list of image file full paths
 img_size_area is a integer. It's desired image size as area. That is, the new width * height
 MIN_AREA is a integer. If original image is less than this, do nothing.
-2016-11-01
+thumb_nail_short_name is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "tn"
+2017-09-01
     """
     for img_path in imgPaths:
         (width, height) = get_img_dimension(img_path)
@@ -244,58 +185,27 @@ MIN_AREA is a integer. If original image is less than this, do nothing.
         (widthNew, heightNew) = int(width * scale_n), int(height * scale_n)
 
         (dirName, fileName) = os.path.split(img_path)
-        newFileName = "zj" + str(widthNew) + "x" + str(heightNew) + "_" + fileName
+        newFileName = thumb_nail_short_name + str(widthNew) + "x" + str(heightNew) + "_" + fileName
         thumb_file_path = dirName + "/" + newFileName
 
-        print('<img src="' + thumb_file_path + '" alt="" />\n')
+        print( thumb_file_path + "\n")
 
         create_thumbnail(img_path, thumb_file_path, scale_n )
 
-def build_thumbnails(dPath, fName, tbPath, rootPath, img_size_area):
-    u"""Generate thumbnail images.
+def build_thumbnails(dPath, fName, img_size_area):
+    u"""create thumbnail images in the same directory as the image, for all local embedded images in html files.
 
-    Args:
-    dPath: directory full path
+    dPath: directory path
     fName: a HTML file name that exists under dPath.
-    tbPath: the thumbnail images destination dir.
-    rootPath: is a root dir (substring of dPath), used to build the dir structure for tbPath for
-each thumbnail.
-    img_size_area: is the thumbnail image size in terms of its area.
+    img_size_area: dimension of thumbnail image, specified as area = width*height
 
-    This function will create thumbnail images in the tbPath. rootPath is
-    a root dir subset of dPath, used to build the dir structure for
-    tbPath for each thumbnail.
-
-    For Example, if
-    dPath = "/Users/mary/Public/pictures"
-    fName = "trip.html" (this exits under dPath)
-    tbPath = "/Users/mary/Public/thumbs"
-    rootPath = "/Users/mary/Public" (must be a substring of dPath or equal to it.)
-    and trip.html contains <img ="Beijin/day1/img1.jpg">
-    then a thumbnail will be generated at
-    "/Users/mary/Public/thumbs/pictures/Beijin/day1/img1.jpg"
-
-    This function makes a shell call to imagemagick's “convert” and “identify” commands, and assumes that both's path on the disk are set in the global vars “convert” and “identify”.
-    2016-11-01
+    2017-09-01
     """
-    # outline:
-    # • Read in the file.
-    # • Get the img paths from inline images tags, accumulate them into a list.
-    # • For each image, find its dimension w and h.
-    # • Generate the thumbnail image on disk.
-    
-    imgPaths = get_large_size_image( get_image_paths(dPath + "/" + fName))
 
-    linkPath = (dPath+"/"+fName)[ len(rootPath) + 1:]
     sys.stdout.write('\n')
-    sys.stdout.write('<a href="' + linkPath + '">')
+    sys.stdout.write((dPath+"/"+fName))
     sys.stdout.write('\n')
-
-    create_scaled_image (imgPaths, tbPath, rootPath, img_size_area, MIN_AREA, JPG_ONLY_THUMBNAILS )
-    # create_thumbnails_same_dir (imgPaths, img_size_area, MIN_AREA)
-
-    sys.stdout.write('</a>')
-    sys.stdout.write('\n')
+    create_thumb_img (get_large_size_image( get_image_paths(dPath + "/" + fName)), img_size_area, MIN_AREA, "z")
 
 #################
 # main
@@ -306,7 +216,7 @@ def dir_handler(dummy, curdir, fileList):
    if MIN_LEVEL <= filess_level <= MAX_LEVEL:
       for fname in fileList:
           if re.search(r"\.html$", fname, re.U) and (not re.search(r"^xx", fname, re.U)):
-            build_thumbnails(curdir, fname, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+            build_thumbnails(dirName, fileName, THUMBNAIL_SIZE_AREA)
 
 while INPUT_PATH_DIR[-1] == "/":
     INPUT_PATH_DIR = INPUT_PATH_DIR[0:-1] # delete trailing slash
@@ -315,10 +225,8 @@ if (len(file_list) != 0):
     for fPath in file_list:
         (dirName, fileName) = os.path.split(fPath)
         # print (dirName, fileName)
-        build_thumbnails(dirName, fileName, THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
+        build_thumbnails(dirName, fileName, THUMBNAIL_SIZE_AREA)
 else:
     os.path.walk(INPUT_PATH_DIR, dir_handler, "dummy")
-
-# build_thumbnails("/home/xah/web/xahlee_info/kbd", "Microsoft_sculpt_ergonomic_keyboard.html", THUMBNAIL_DIR, ROOT_DIR, THUMBNAIL_SIZE_AREA)
 
 # create_thumbnail( "/home/xah/web/xahlee_info/kbd/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", "/home/xah/web/xahlee_info/kbd/tn/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", 0.21460759332655016)
