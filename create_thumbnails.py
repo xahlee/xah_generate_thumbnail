@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Python
 
-# © 2006-04, …, 2017-07-30 by Xah Lee, ∑ http://xahlee.info/
+# © 2006-04, …, 2017-09-02 by Xah Lee, ∑ http://xahlee.info/
 
 # generate a thumbnail images.
 
@@ -19,17 +19,23 @@
 # no trailing slash
 INPUT_PATH_DIR = "/home/xah/web/xaharts_org/dinju"
 
+# if this this is not empty, then just create thumbnails of these images
+# each element is full path
+IMAGE_LIST  = [
+
+]
+
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
-file_list  = [
-
-# "/home/xah/web/xaharts_org/Whirlwheel_dir/reflecting_disks/solar_tower.html"
-
-"/home/xah/web/xaharts_org/dinju/bird_nest_building.html"
+# each element is full path
+FILE_LIST  = [
 
 ]
 
 # thumbnail area size, as width times height
 THUMBNAIL_SIZE_AREA = 200 * 200
+
+# NAME_TAG is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "ztn_"
+NAME_TAG = "ztn_"
 
 # if a image is smaller than this area, don't create thumbnail for it.
 MIN_AREA = THUMBNAIL_SIZE_AREA * 1.05
@@ -169,23 +175,24 @@ def get_image_paths(html_full_path):
         paths.append (link_fullpath(dirPath, im))
     return paths
 
-def create_thumb_img (imgPaths, img_size_area, MIN_AREA, thumb_nail_short_name):
+def create_thumb_img (img_paths, img_size_area, min_area, name_tag):
     u"""create the scaled image files
-imgPaths is a list of image file full paths
+img_paths is a list of image file full paths
 img_size_area is a integer. It's desired image size as area. That is, the new width * height
-MIN_AREA is a integer. If original image is less than this, do nothing.
-thumb_nail_short_name is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "tn"
+min_area is a integer. If original image is less than this, do nothing.
+name_tag is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "ztn_"
 2017-09-01
     """
-    for img_path in imgPaths:
+    for img_path in img_paths:
         (width, height) = get_img_dimension(img_path)
-        if (int(width) * int(height)) < MIN_AREA: continue
+        if (int(width) * int(height)) < min_area: continue
 
         scale_n = scale_factor(img_size_area, width, height)
         (widthNew, heightNew) = int(width * scale_n), int(height * scale_n)
 
         (dirName, fileName) = os.path.split(img_path)
-        newFileName = thumb_nail_short_name + str(widthNew) + "x" + str(heightNew) + "_" + fileName
+        # newFileName = name_tag + str(widthNew) + "x" + str(heightNew) + "_" + fileName
+        newFileName = name_tag + fileName
         thumb_file_path = dirName + "/" + newFileName
 
         print( thumb_file_path + "\n")
@@ -205,7 +212,7 @@ def build_thumbnails(dPath, fName, img_size_area):
     sys.stdout.write('\n')
     sys.stdout.write((dPath+"/"+fName))
     sys.stdout.write('\n')
-    create_thumb_img (get_large_size_image( get_image_paths(dPath + "/" + fName)), img_size_area, MIN_AREA, "z")
+    create_thumb_img (get_large_size_image( get_image_paths(dPath + "/" + fName)), img_size_area, MIN_AREA, NAME_TAG)
 
 #################
 # main
@@ -221,12 +228,15 @@ def dir_handler(dummy, curdir, fileList):
 while INPUT_PATH_DIR[-1] == "/":
     INPUT_PATH_DIR = INPUT_PATH_DIR[0:-1] # delete trailing slash
 
-if (len(file_list) != 0):
-    for fPath in file_list:
-        (dirName, fileName) = os.path.split(fPath)
-        # print (dirName, fileName)
-        build_thumbnails(dirName, fileName, THUMBNAIL_SIZE_AREA)
+if (len(IMAGE_LIST) > 0):
+    create_thumb_img (IMAGE_LIST, THUMBNAIL_SIZE_AREA, MIN_AREA, NAME_TAG)
 else:
-    os.path.walk(INPUT_PATH_DIR, dir_handler, "dummy")
+    if (len(FILE_LIST) > 0):
+        for fPath in FILE_LIST:
+            (dirName, fileName) = os.path.split(fPath)
+            # print (dirName, fileName)
+            build_thumbnails(dirName, fileName, THUMBNAIL_SIZE_AREA)
+    else:
+        os.path.walk(INPUT_PATH_DIR, dir_handler, "dummy")
 
 # create_thumbnail( "/home/xah/web/xahlee_info/kbd/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", "/home/xah/web/xahlee_info/kbd/tn/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", 0.21460759332655016)
