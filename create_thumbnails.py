@@ -29,6 +29,8 @@ IMAGE_LIST  = [
 # each element is full path
 FILE_LIST  = [
 
+"/Users/xah/web/xahlee_info/kbd/logitech_mx_ergo_trackball.html"
+
 ]
 
 # thumbnail area size, as width times height
@@ -52,15 +54,15 @@ OVERWRITE_EXISTING_THUMBNAIL = True # True or False
 
 # imageMagic/GraphicsMagic “identify” or “convert” program path
 
-GM_ID_PATH = r"/usr/bin/convert"
-GM_CVT_PATH = r"/usr/bin/convert"
+GM_ID_PATH = r"/usr/local/bin/identify"
+GM_CVT_PATH = r"/usr/local/bin/convert"
 
 #--------------------------------------------------
 import re
 import subprocess
 import os
 import sys
-import Image
+# import Image
 import os.path
 
 #--------------------------------------------------
@@ -91,7 +93,9 @@ def get_img_dimension(img_path):
     Returns a tuple: (width, height)
     Each element is a integer.
     """
-    return Image.open(img_path).size
+    wh = subprocess.check_output([GM_ID_PATH, "-format", "%w %h", img_path]).split(" ")
+    return (int(wh[0]), int(wh[1]))
+    # return Image.open(img_path).size
 
 def create_thumbnail( i_path, new_path, scale_n):
     u"""Create a image from i_path at new_path, with scale scale_n.
@@ -110,7 +114,7 @@ will create
 "/home/jane/_300x400_cat.jpg"
     """
     (dirName, fileName) = os.path.split(img_path)
-    w, h = Image.open(img_path).size
+    (w, h) = get_img_dimension(img_path)
     new_path = dirName + "/" + "_" + str( int(round(w * n/100.0))) + "x" + str(int(round(h * n/100.0))) + "_" + fileName
     print(new_path)
     subprocess.Popen([GM_CVT_PATH, "-scale", str(n) + "%", "-sharpen","1", img_path, new_path] ).wait()
@@ -238,5 +242,3 @@ else:
             build_thumbnails(dirName, fileName, THUMBNAIL_SIZE_AREA)
     else:
         os.path.walk(INPUT_PATH_DIR, dir_handler, "dummy")
-
-# create_thumbnail( "/home/xah/web/xahlee_info/kbd/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", "/home/xah/web/xahlee_info/kbd/tn/i/Microsoft_sculpt_ergonomic_keyboard_41754.jpg", 0.21460759332655016)
