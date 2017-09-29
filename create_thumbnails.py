@@ -15,45 +15,42 @@
 #--------------------------------------------------
 # User Inputs
 
-# path where HTML files and images are at. e.g. “/home/xah/web/xahsl_org/sl”
+# path where HTML files and images are at. e.g. "/home/xah/web/xahlee_info/xyz"
 # no trailing slash
-INPUT_PATH_DIR = "/home/xah/web/xaharts_org/dinju"
+INPUT_PATH_DIR = "/home/xah/web/xahlee_info/xyz"
 
-# if this this is not empty, then just create thumbnails of these images
-# each element is full path
+# if this this is not empty, then just create thumbnails of these images. each element is full path
+# e.g. "/home/xah/web/xahlee_info/img/cat.jpg"
 IMAGE_LIST  = [
 
 ]
 
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
 # each element is full path
+# e.g. "/home/xah/web/xahlee_info/kbd/logitech_mx_ergo_trackball.html"
 FILE_LIST  = [
-
-"/Users/xah/web/xahlee_info/kbd/logitech_mx_ergo_trackball.html"
 
 ]
 
 # thumbnail area size, as width times height
 THUMBNAIL_SIZE_AREA = 200 * 200
+THUMBNAIL_SIZE_AREA = 250 * 250
 
-# NAME_TAG is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "ztn_"
-NAME_TAG = "ztn_"
+# NAME_PREFIX is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "ztn_"
+NAME_PREFIX = "ztn_"
 
 # if a image is smaller than this area, don't create thumbnail for it.
 MIN_AREA = THUMBNAIL_SIZE_AREA * 1.05
 
 # if True, all thumbnails will be in JPG format. Otherwise, it's the same on the source image format.
 # This feature is usedful because stamp sized black & white PNG doesn't look good, may have artifacts.
-JPG_ONLY_THUMBNAILS = True # True or False
+JPG_ONLY_THUMBNAILS = True
 
 # depth of nested dir to dive into.
 MIN_LEVEL = 1; # files and dirs of mydir are level 1.
 MAX_LEVEL = 4; # inclusive
 
-OVERWRITE_EXISTING_THUMBNAIL = True # True or False
-
-# imageMagic/GraphicsMagic “identify” or “convert” program path
-
+# imageMagic/GraphicsMagic “identify” and “convert” program path
 GM_ID_PATH = r"/usr/local/bin/identify"
 GM_CVT_PATH = r"/usr/local/bin/convert"
 
@@ -179,12 +176,12 @@ def get_image_paths(html_full_path):
         paths.append (link_fullpath(dirPath, im))
     return paths
 
-def create_thumb_img (img_paths, img_size_area, min_area, name_tag):
+def create_thumb_img (img_paths, img_size_area, min_area, name_prefix):
     u"""create the scaled image files
 img_paths is a list of image file full paths
 img_size_area is a integer. It's desired image size as area. That is, the new width * height
 min_area is a integer. If original image is less than this, do nothing.
-name_tag is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "ztn_"
+name_prefix is a string that will be in the new thumbnail name. For easy identification of the file as thumb. e.g. "ztn_"
 2017-09-01
     """
     for img_path in img_paths:
@@ -195,8 +192,10 @@ name_tag is a string that will be in the new thumbnail name. For easy identifica
         (widthNew, heightNew) = int(width * scale_n), int(height * scale_n)
 
         (dirName, fileName) = os.path.split(img_path)
-        # newFileName = name_tag + str(widthNew) + "x" + str(heightNew) + "_" + fileName
-        newFileName = name_tag + fileName
+        # newFileName = name_prefix + str(widthNew) + "x" + str(heightNew) + "_" + fileName
+
+        newFileName = name_prefix + (re.sub(r"\.png", r".jpg", fileName) if JPG_ONLY_THUMBNAILS else fileName)
+
         thumb_file_path = dirName + "/" + newFileName
 
         print( thumb_file_path + "\n")
@@ -216,7 +215,7 @@ def build_thumbnails(dPath, fName, img_size_area):
     sys.stdout.write('\n')
     sys.stdout.write((dPath+"/"+fName))
     sys.stdout.write('\n')
-    create_thumb_img (get_large_size_image( get_image_paths(dPath + "/" + fName)), img_size_area, MIN_AREA, NAME_TAG)
+    create_thumb_img (get_large_size_image( get_image_paths(dPath + "/" + fName)), img_size_area, MIN_AREA, NAME_PREFIX)
 
 #################
 # main
@@ -233,7 +232,7 @@ while INPUT_PATH_DIR[-1] == "/":
     INPUT_PATH_DIR = INPUT_PATH_DIR[0:-1] # delete trailing slash
 
 if (len(IMAGE_LIST) > 0):
-    create_thumb_img (IMAGE_LIST, THUMBNAIL_SIZE_AREA, MIN_AREA, NAME_TAG)
+    create_thumb_img (IMAGE_LIST, THUMBNAIL_SIZE_AREA, MIN_AREA, NAME_PREFIX)
 else:
     if (len(FILE_LIST) > 0):
         for fPath in FILE_LIST:
