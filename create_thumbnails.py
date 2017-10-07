@@ -23,6 +23,8 @@ INPUT_PATH_DIR = "/home/xah/web/xahlee_info/xyz"
 # e.g. "/home/xah/web/xahlee_info/img/cat.jpg"
 IMAGE_LIST  = [
 
+"/Users/xah/x3dxm/vmm/Surface/pilz/i/pilz_morph53_009.png"
+
 ]
 
 # if this this is not empty, then only these files will be processed. INPUT_PATH_DIR is still needed.
